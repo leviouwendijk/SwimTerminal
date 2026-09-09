@@ -63,12 +63,14 @@ public struct SwimTerminalSurface:
     public var placeholderStyle: TerminalStyle
     public private(set) var yankPresentation:
         SwimTerminalYankPresentation?
+    public private(set) var isFollowingEnd: Bool
 
     var renderState: RenderState?
 
     public init(
         editor: SwimEditor = .init(),
         visibleRows: Int = 0,
+        followEnd: Bool = false,
         commandLine: TerminalCommandLine = .init(),
         configuration: SwimTerminalConfiguration = .init(),
         sizePolicy: SwimTerminalSurfaceSizePolicy = .init(),
@@ -82,6 +84,7 @@ public struct SwimTerminalSurface:
         viewport = TerminalViewport(
             visibleRows: visibleRows
         )
+        isFollowingEnd = followEnd
         self.commandLine = commandLine
         self.configuration = configuration
         self.sizePolicy = sizePolicy
@@ -178,6 +181,8 @@ public struct SwimTerminalSurface:
             }
         }
 
+        let cursorBefore = editor.buffer.cursor
+        let modeBefore = editor.mode
         let bridge = SwimTerminalBridge(
             configuration: configuration
         )
@@ -189,6 +194,15 @@ public struct SwimTerminalSurface:
                 viewport.visibleRows
             )
         )
+
+        if cursorBefore != editor.buffer.cursor
+            || modeBefore != editor.mode
+        {
+            isFollowingEnd =
+                editor.mode == .normal
+                && editor.buffer.cursor.offset
+                    == editor.buffer.characterCount
+        }
 
         switch result {
         case .changed:
@@ -233,11 +247,30 @@ public struct SwimTerminalSurface:
     public mutating func replace(
         with text: String
     ) {
+        let cursor = isFollowingEnd
+            ? nil
+            : editor.buffer.cursor
+
         editor.replace(
-            with: text
+            with: text,
+            cursor: cursor
         )
         yankPresentation = nil
-        renderState = nil
+    }
+
+    @discardableResult
+    public mutating func append(
+        _ text: String
+    ) -> Bool {
+        guard editor.appendBufferContent(
+            text,
+            moveCursorToEnd: isFollowingEnd
+        ) else {
+            return false
+        }
+
+        yankPresentation = nil
+        return true
     }
 
     public mutating func clear() {

@@ -7,6 +7,7 @@ enum SwimTerminalTest {
         case nil:
             try SwimTerminalBridgeSmoke.run()
             try SwimTerminalSurfaceSmoke.run()
+            try SwimTerminalFollowEndSmoke.run()
 
             print(
                 "swim terminal smoke passed"

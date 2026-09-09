@@ -39,19 +39,29 @@ extension SwimTerminalSurface {
             contentRows: layout.rows.count,
             visibleRows: region.rows
         )
-        viewport.reveal(
-            row: cursor.row,
-            margin: min(
-                presentation.cursorRevealMargin,
-                max(
-                    0,
-                    region.rows - 1
+
+        if isFollowingEnd {
+            viewport.moveToEnd()
+        } else {
+            viewport.reveal(
+                row: cursor.row,
+                margin: min(
+                    presentation.cursorRevealMargin,
+                    max(
+                        0,
+                        region.rows - 1
+                    )
                 )
             )
-        )
+        }
 
         if let renderState,
-           renderState.text == editor.buffer.text,
+           (
+            renderState.text == editor.buffer.text
+                || editor.buffer.text.hasPrefix(
+                    renderState.text
+                )
+           ),
            renderState.region == region,
            renderState.contentColumns == textColumns
         {
