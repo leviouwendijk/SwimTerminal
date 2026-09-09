@@ -4,6 +4,10 @@ import SwimTerminal
 import Terminal
 
 enum SwimTerminalSurfaceLab {
+    private enum Action: Sendable {
+        case unused
+    }
+
     static func run() throws {
         let stream = TerminalStream.standardError
         let session = try TerminalSession(
@@ -12,6 +16,7 @@ enum SwimTerminalSurfaceLab {
                 hideCursor: true,
                 useRawMode: true,
                 useBracketedPaste: true,
+                controlSignalBehavior: .input,
                 restoreOnInterrupt: true,
                 outputStream: stream
             )
@@ -25,6 +30,11 @@ enum SwimTerminalSurfaceLab {
         var renderer = TerminalFrameRenderer(
             stream: stream
         )
+        var keyMap = TerminalKeyMap<Action>()
+        keyMap.remap(
+            .control("C"),
+            to: .escape
+        )
         var size = Terminal.size(
             for: stream
         )
@@ -33,6 +43,9 @@ enum SwimTerminalSurfaceLab {
                 text: fixture
             ),
             compactPresentation: SwimTerminalPresentation(
+                lineNumbers: TerminalLineNumberPresentation(
+                    mode: .hybrid
+                ),
                 indentationGuides: TerminalIndentationGuideOptions(
                     isEnabled: true,
                     width: 4
@@ -147,8 +160,30 @@ enum SwimTerminalSurfaceLab {
                     }
                 }
 
+                let routedInput: TerminalInputEvent
+
+                switch input.legacyKey {
+                case .control(let key)
+                where key.uppercased() == "C":
+                    switch keyMap.resolveOrFallback(
+                        input.legacyKey
+                    ) {
+                    case .key(let key):
+                        routedInput = .key(
+                            key
+                        )
+
+                    case .action(_),
+                         .consumed:
+                        continue
+                    }
+
+                default:
+                    routedInput = input
+                }
+
                 guard let event = surface.handle(
-                    input
+                    routedInput
                 ) else {
                     continue
                 }
@@ -168,15 +203,21 @@ enum SwimTerminalSurfaceLab {
                     needsRender = true
 
                 case .commandRequested(.quit):
-                    return
+                    switch surface.surfacePresentation {
+                    case .expanded:
+                        surface.setSurfacePresentation(
+                            .compact
+                        )
+                        needsRender = true
+
+                    case .compact:
+                        return
+                    }
 
                 case .invalidCommand:
                     needsRender = true
 
                 case .cancelRequested:
-                    surface.setCommandStatus(
-                        "cancel request ignored — use :q to leave the lab"
-                    )
                     needsRender = true
                 }
             }
@@ -200,9 +241,10 @@ enum SwimTerminalSurfaceLab {
     Wide character fixture: 界
     Tab fixture:\talpha\tbeta
 
+    Ctrl-C behaves as Escape and never terminates the laboratory.
     Ctrl-F toggles compact and expanded presentation.
-    Expanded mode enables hybrid line numbers.
+    Compact and expanded presentations both show hybrid line numbers.
     :w emits a typed write request but does not touch the filesystem.
-    :q exits this laboratory.
+    :q collapses expanded presentation; from compact presentation it exits.
     """
 }
