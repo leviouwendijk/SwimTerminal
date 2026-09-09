@@ -9,6 +9,31 @@ enum SwimTerminalSurfaceLab {
     }
 
     static func run() throws {
+        try run(
+            editor: SwimEditor(
+                text: fixture
+            ),
+            followEnd: false,
+            header: "SwimTerminal · Ctrl-F compact/expanded · :w write request · :q quit"
+        )
+    }
+
+    static func runNonmodifiable() throws {
+        try run(
+            editor: SwimEditor(
+                text: nonmodifiableFixture,
+                bufferModifiability: .nonmodifiable
+            ),
+            followEnd: true,
+            header: "SwimTerminal nonmodifiable · motions + Visual/yank enabled · edits rejected · G follows tail"
+        )
+    }
+
+    private static func run(
+        editor: SwimEditor,
+        followEnd: Bool,
+        header: String
+    ) throws {
         let stream = TerminalStream.standardError
         let session = try TerminalSession(
             options: TerminalSession.Options(
@@ -39,9 +64,8 @@ enum SwimTerminalSurfaceLab {
             for: stream
         )
         var surface = SwimTerminalSurface(
-            editor: SwimEditor(
-                text: fixture
-            ),
+            editor: editor,
+            followEnd: followEnd,
             compactPresentation: SwimTerminalPresentation(
                 lineNumbers: TerminalLineNumberPresentation(
                     mode: .hybrid
@@ -77,8 +101,17 @@ enum SwimTerminalSurfaceLab {
                 return
             }
 
+            let headerText = followEnd
+                ? header
+                    + " · "
+                    + (
+                        surface.isFollowingEnd
+                            ? "tail"
+                            : "detached"
+                    )
+                : header
             let header = TerminalDisplay.clipped(
-                "SwimTerminal · Ctrl-F compact/expanded · :w write request · :q quit",
+                headerText,
                 columns: size.columns
             )
 
@@ -219,6 +252,9 @@ enum SwimTerminalSurfaceLab {
 
                 case .cancelRequested:
                     needsRender = true
+
+                case .rejected:
+                    needsRender = true
                 }
             }
 
@@ -247,4 +283,50 @@ enum SwimTerminalSurfaceLab {
     :w emits a typed write request but does not touch the filesystem.
     :q collapses expanded presentation; from compact presentation it exits.
     """
+
+    private static let nonmodifiableFixture: String = {
+        var lines = [
+            "SwimTerminal nonmodifiable buffer laboratory",
+            "",
+            "This is a real SwimEditor configured as .nonmodifiable.",
+            "Navigation and observation semantics remain active.",
+            "User editing semantics must not change this text.",
+            "",
+            "Try:",
+            "    h j k l     normal motions",
+            "    gg / G      document start / end",
+            "    Ctrl-D/U    page motions",
+            "    v / V       Visual character / line",
+            "    Ctrl-V      Visual block",
+            "    y            yank selection",
+            "",
+            "These must NOT modify the buffer:",
+            "    i a o O R",
+            "    x d c p P",
+            "    undo / redo",
+            "    pasted text",
+            "",
+            "Follow-tail inspection:",
+            "    the lab starts following the tail",
+            "    move upward to detach",
+            "    G returns to the end and resumes tail following",
+            "    the header shows tail vs detached",
+            "",
+            "Ctrl-C behaves as Escape.",
+            "Ctrl-F toggles compact / expanded presentation.",
+            ":q collapses expanded presentation; from compact it exits.",
+            "",
+            "--- scroll fixture ---"
+        ]
+
+        lines.append(
+            contentsOf: (1...60).map { line in
+                "generated output line \(line) · inspect scrolling, selection, yank, and cursor reveal"
+            }
+        )
+
+        return lines.joined(
+            separator: "\n"
+        )
+    }()
 }

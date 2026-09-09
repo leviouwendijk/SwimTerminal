@@ -225,6 +225,17 @@ public struct SwimTerminalSurface:
         case .cancelRequested:
             return .cancelRequested
 
+        case .rejected(let rejection):
+            commandLine.setStatus(
+                SwimTerminalEditorMessage.text(
+                    for: rejection
+                )
+            )
+            renderState = nil
+            return .rejected(
+                rejection
+            )
+
         case nil:
             return nil
         }

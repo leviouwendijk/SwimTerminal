@@ -11,4 +11,5 @@ public enum SwimTerminalSurfaceEvent:
     case commandRequested(SwimInterpreter.ExCommand)
     case invalidCommand(String)
     case cancelRequested
+    case rejected(SwimEditorRejection)
 }

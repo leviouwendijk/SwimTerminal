@@ -8,6 +8,7 @@ enum SwimTerminalTest {
             try SwimTerminalBridgeSmoke.run()
             try SwimTerminalSurfaceSmoke.run()
             try SwimTerminalFollowEndSmoke.run()
+            try SwimTerminalRejectionSmoke.run()
 
             print(
                 "swim terminal smoke passed"
@@ -15,6 +16,9 @@ enum SwimTerminalTest {
 
         case "surface":
             try SwimTerminalSurfaceLab.run()
+
+        case "nonmod":
+            try SwimTerminalSurfaceLab.runNonmodifiable()
 
         default:
             print(
@@ -24,9 +28,11 @@ enum SwimTerminalTest {
                 Usage:
                     swift run swimtermtest
                     swift run swimtermtest surface
+                    swift run swimtermtest nonmod
 
                 Commands:
-                    surface    Run the interactive SwimTerminal editor surface laboratory.
+                    surface    Run the interactive editable SwimTerminal surface laboratory.
+                    nonmod     Run the interactive nonmodifiable SwimTerminal buffer laboratory.
                 """
             )
         }
