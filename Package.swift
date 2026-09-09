@@ -1,26 +1,58 @@
 // swift-tools-version: 6.3
-// The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "SwimTerminal",
+    platforms: [
+        .macOS(.v13)
+    ],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "SwimTerminal",
             targets: ["SwimTerminal"]
         ),
+        .executable(
+            name: "swimtermtest",
+            targets: ["SwimTerminalTestFlows"]
+        ),
+    ],
+    dependencies: [
+        .package(
+            url: "https://github.com/leviouwendijk/Swim.git",
+            branch: "master"
+        ),
+        .package(
+            url: "https://github.com/leviouwendijk/SwimInterpreter.git",
+            branch: "master"
+        ),
+        .package(
+            url: "https://github.com/leviouwendijk/Terminal.git",
+            branch: "master"
+        ),
+        .package(
+            url: "https://github.com/leviouwendijk/Clipboard.git",
+            branch: "master"
+        ),
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "SwimTerminal"
+            name: "SwimTerminal",
+            dependencies: [
+                "Swim",
+                "SwimInterpreter",
+                "Terminal",
+                "Clipboard",
+            ]
         ),
-        .testTarget(
-            name: "SwimTerminalTests",
-            dependencies: ["SwimTerminal"]
+        .executableTarget(
+            name: "SwimTerminalTestFlows",
+            dependencies: [
+                "SwimTerminal",
+                "Swim",
+                "SwimInterpreter",
+                "Terminal",
+            ]
         ),
     ],
     swiftLanguageModes: [.v6]
