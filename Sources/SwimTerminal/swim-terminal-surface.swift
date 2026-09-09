@@ -290,11 +290,19 @@ public struct SwimTerminalSurface:
     public func compactRows(
         columns: Int
     ) -> Int {
-        sizePolicy.rows(
+        let editorRows = sizePolicy.rows(
             forContentRows: contentRowCount(
                 columns: columns,
                 surfacePresentation: .compact
             )
+        )
+        let commandLineRows = commandLine.hasPresentation
+            ? 1
+            : 0
+
+        return min(
+            sizePolicy.maximumRows,
+            editorRows + commandLineRows
         )
     }
 

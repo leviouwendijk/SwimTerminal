@@ -3,11 +3,31 @@ import SwimTerminal
 @main
 enum SwimTerminalTest {
     static func main() throws {
-        try SwimTerminalBridgeSmoke.run()
-        try SwimTerminalSurfaceSmoke.run()
+        switch CommandLine.arguments.dropFirst().first {
+        case nil:
+            try SwimTerminalBridgeSmoke.run()
+            try SwimTerminalSurfaceSmoke.run()
 
-        print(
-            "swim terminal smoke passed"
-        )
+            print(
+                "swim terminal smoke passed"
+            )
+
+        case "surface":
+            try SwimTerminalSurfaceLab.run()
+
+        default:
+            print(
+                """
+                swimtermtest
+
+                Usage:
+                    swift run swimtermtest
+                    swift run swimtermtest surface
+
+                Commands:
+                    surface    Run the interactive SwimTerminal editor surface laboratory.
+                """
+            )
+        }
     }
 }

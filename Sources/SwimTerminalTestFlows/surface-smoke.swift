@@ -293,8 +293,11 @@ enum SwimTerminalSurfaceSmoke {
             atNanoseconds: 3
         )
 
-        guard frame.cursor?.shape == .bar,
-              frame.spans.contains(
+        guard surface.compactRows(
+            columns: 20
+        ) == 2,
+        frame.cursor?.shape == .bar,
+        frame.spans.contains(
                 where: {
                     $0.content.contains(
                         ":q"
