@@ -4,9 +4,10 @@ import SwimTerminal
 enum SwimTerminalTest {
     static func main() throws {
         try SwimTerminalBridgeSmoke.run()
+        try SwimTerminalSurfaceSmoke.run()
 
         print(
-            "swim terminal bridge smoke passed"
+            "swim terminal smoke passed"
         )
     }
 }
