@@ -159,9 +159,9 @@ public struct SwimTerminalSurface:
                     rawValue: text
                 ) else {
                     commandLine.setStatus(
-                        text.isEmpty
-                            ? "Not an editor command"
-                            : "Not an editor command: \(text)"
+                        SwimTerminalEditorMessage.text(
+                            forInvalidCommand: text
+                        )
                     )
                     return .invalidCommand(
                         text

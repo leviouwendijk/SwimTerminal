@@ -377,7 +377,7 @@ enum SwimTerminalSurfaceSmoke {
             "nope"
         ),
         surface.commandLine.status
-            == "Not an editor command: nope" else {
+            == "E492: Not an editor command: nope" else {
             throw Failure.unexpectedCommandLine
         }
 
