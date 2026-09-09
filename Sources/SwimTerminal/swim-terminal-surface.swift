@@ -52,6 +52,7 @@ public struct SwimTerminalSurface:
 {
     public private(set) var editor: SwimEditor
     public internal(set) var viewport: TerminalViewport
+    public private(set) var commandLine: TerminalCommandLine
     public var configuration: SwimTerminalConfiguration
     public var sizePolicy: SwimTerminalSurfaceSizePolicy
     public private(set) var surfacePresentation:
@@ -68,6 +69,7 @@ public struct SwimTerminalSurface:
     public init(
         editor: SwimEditor = .init(),
         visibleRows: Int = 0,
+        commandLine: TerminalCommandLine = .init(),
         configuration: SwimTerminalConfiguration = .init(),
         sizePolicy: SwimTerminalSurfaceSizePolicy = .init(),
         surfacePresentation: SwimTerminalSurfacePresentation = .compact,
@@ -80,6 +82,7 @@ public struct SwimTerminalSurface:
         viewport = TerminalViewport(
             visibleRows: visibleRows
         )
+        self.commandLine = commandLine
         self.configuration = configuration
         self.sizePolicy = sizePolicy
         self.surfacePresentation = surfacePresentation
@@ -137,7 +140,44 @@ public struct SwimTerminalSurface:
         _ event: TerminalInputEvent,
         nowNanoseconds: UInt64 =
             DispatchTime.now().uptimeNanoseconds
-    ) -> SwimEditorEvent? {
+    ) -> SwimTerminalSurfaceEvent? {
+        if commandLine.isActive {
+            switch commandLine.handle(
+                event.legacyKey
+            ) {
+            case .changed:
+                renderState = nil
+                return .changed
+
+            case .submitted(let text):
+                renderState = nil
+
+                guard let command = SwimInterpreter.ExCommand(
+                    rawValue: text
+                ) else {
+                    commandLine.setStatus(
+                        text.isEmpty
+                            ? "Not an editor command"
+                            : "Not an editor command: \(text)"
+                    )
+                    return .invalidCommand(
+                        text
+                    )
+                }
+
+                return .commandRequested(
+                    command
+                )
+
+            case .cancelled:
+                renderState = nil
+                return .changed
+
+            case nil:
+                return nil
+            }
+        }
+
         let bridge = SwimTerminalBridge(
             configuration: configuration
         )
@@ -150,14 +190,30 @@ public struct SwimTerminalSurface:
             )
         )
 
-        if case .copyRequested(let copy)? = result {
+        switch result {
+        case .changed:
+            return .changed
+
+        case .copyRequested(let copy):
             yankPresentation = SwimTerminalYankPresentation(
                 copy: copy,
                 startedAtNanoseconds: nowNanoseconds
             )
-        }
+            return .copyRequested(
+                copy
+            )
 
-        return result
+        case .commandLineRequested:
+            commandLine.begin()
+            renderState = nil
+            return .changed
+
+        case .cancelRequested:
+            return .cancelRequested
+
+        case nil:
+            return nil
+        }
     }
 
     @discardableResult
@@ -165,7 +221,7 @@ public struct SwimTerminalSurface:
         _ key: TerminalKey,
         nowNanoseconds: UInt64 =
             DispatchTime.now().uptimeNanoseconds
-    ) -> SwimEditorEvent? {
+    ) -> SwimTerminalSurfaceEvent? {
         handle(
             .key(
                 key
@@ -196,6 +252,15 @@ public struct SwimTerminalSurface:
         editor.setMode(
             mode
         )
+    }
+
+    public mutating func setCommandStatus(
+        _ status: String?
+    ) {
+        commandLine.setStatus(
+            status
+        )
+        renderState = nil
     }
 
     public mutating func setSurfacePresentation(

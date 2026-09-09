@@ -13,6 +13,7 @@ enum SwimTerminalSurfaceSmoke {
         case unexpectedYank
         case unexpectedYankExpiration
         case unexpectedIndentationGuides
+        case unexpectedCommandLine
         case unexpectedSizing
     }
 
@@ -21,6 +22,7 @@ enum SwimTerminalSurfaceSmoke {
         try runViewportAndCursorProbe()
         try runSelectionAndYankProbe()
         try runIndentationGuideProbe()
+        try runCommandLineProbe()
         try runSizingProbe()
     }
 
@@ -248,6 +250,147 @@ enum SwimTerminalSurfaceSmoke {
             }
         ) else {
             throw Failure.unexpectedIndentationGuides
+        }
+    }
+
+    private static func runCommandLineProbe() throws {
+        var surface = SwimTerminalSurface(
+            editor: SwimEditor(
+                text: "abc"
+            ),
+            configuration: SwimTerminalConfiguration(
+                yankClipboardPolicy: .registerOnly
+            )
+        )
+
+        guard surface.handle(
+            .char(
+                ":"
+            ),
+            nowNanoseconds: 1
+        ) == .changed,
+        surface.commandLine.isActive,
+        surface.handle(
+            .char(
+                "q"
+            ),
+            nowNanoseconds: 2
+        ) == .changed else {
+            throw Failure.unexpectedCommandLine
+        }
+
+        var frame = TerminalFrame(
+            rows: 2,
+            columns: 20
+        )
+
+        surface.render(
+            into: &frame,
+            in: TerminalRegion(
+                rows: 2,
+                columns: 20
+            ),
+            atNanoseconds: 3
+        )
+
+        guard frame.cursor?.shape == .bar,
+              frame.spans.contains(
+                where: {
+                    $0.content.contains(
+                        ":q"
+                    )
+                }
+              ),
+              surface.handle(
+                .enter,
+                nowNanoseconds: 4
+              ) == .commandRequested(
+                .quit
+              ),
+              !surface.commandLine.isActive else {
+            throw Failure.unexpectedCommandLine
+        }
+
+        guard surface.handle(
+            .char(
+                ":"
+            ),
+            nowNanoseconds: 5
+        ) == .changed,
+        surface.handle(
+            .char(
+                "w"
+            ),
+            nowNanoseconds: 6
+        ) == .changed,
+        surface.handle(
+            .enter,
+            nowNanoseconds: 7
+        ) == .commandRequested(
+            .write
+        ) else {
+            throw Failure.unexpectedCommandLine
+        }
+
+        surface.setCommandStatus(
+            "written"
+        )
+        frame.removeAll()
+        surface.render(
+            into: &frame,
+            in: TerminalRegion(
+                rows: 2,
+                columns: 20
+            ),
+            atNanoseconds: 8
+        )
+
+        guard frame.spans.contains(
+            where: {
+                $0.content.contains(
+                    "written"
+                )
+            }
+        ) else {
+            throw Failure.unexpectedCommandLine
+        }
+
+        guard surface.handle(
+            .char(
+                ":"
+            ),
+            nowNanoseconds: 9
+        ) == .changed,
+        surface.handle(
+            .char(
+                "nope"
+            ),
+            nowNanoseconds: 10
+        ) == .changed,
+        surface.handle(
+            .enter,
+            nowNanoseconds: 11
+        ) == .invalidCommand(
+            "nope"
+        ),
+        surface.commandLine.status
+            == "Not an editor command: nope" else {
+            throw Failure.unexpectedCommandLine
+        }
+
+        guard surface.handle(
+            .char(
+                ":"
+            ),
+            nowNanoseconds: 12
+        ) == .changed,
+        surface.commandLine.isActive,
+        surface.handle(
+            .escape,
+            nowNanoseconds: 13
+        ) == .changed,
+        !surface.commandLine.isActive else {
+            throw Failure.unexpectedCommandLine
         }
     }
 

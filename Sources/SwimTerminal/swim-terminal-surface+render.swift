@@ -4,7 +4,7 @@ import SwimInterpreter
 import Terminal
 
 extension SwimTerminalSurface {
-    public mutating func render(
+    mutating func renderEditor(
         into frame: inout TerminalFrame,
         in region: TerminalRegion,
         isFocused: Bool = true,
