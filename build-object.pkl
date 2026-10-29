@@ -1,0 +1,20 @@
+uuid = "A49020B4-4554-4B6F-917F-1601445222EB"
+name = "SwimTerminal"
+types { "library" }
+versions {
+    release {
+        major = 0
+        minor = 1
+        patch = 0
+    }
+}
+compile {
+    use = false
+    arguments { }
+}
+tests {
+    primary = "swimtermtest"
+}
+details = ""
+author = "levi"
+update = "https://raw.githubusercontent.com/leviouwendijk/SwimTerminal/master/build-object.pkl"

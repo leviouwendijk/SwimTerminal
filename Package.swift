@@ -12,6 +12,7 @@ let package = Package(
             name: "SwimTerminal",
             targets: ["SwimTerminal"]
         ),
+
         .executable(
             name: "swimtermtest",
             targets: ["SwimTerminalTestFlows"]

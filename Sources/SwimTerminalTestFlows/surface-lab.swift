@@ -235,6 +235,12 @@ enum SwimTerminalSurfaceLab {
                     )
                     needsRender = true
 
+                case .commandRequested(.explore):
+                    surface.setCommandStatus(
+                        "explore requested — no explorer in this standalone lab"
+                    )
+                    needsRender = true
+
                 case .commandRequested(.quit):
                     switch surface.surfacePresentation {
                     case .expanded:
