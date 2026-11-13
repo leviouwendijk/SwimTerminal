@@ -19,6 +19,7 @@ enum SwimTerminalBridgeSmoke {
         try runInputProbe()
         try runPasteProbe()
         try runYankProbe()
+        try runMouseDuringYankProbe()
         try runDisplayColumnProbe()
     }
 
@@ -29,6 +30,18 @@ enum SwimTerminalBridgeSmoke {
               configuration.tabWidth == 4 else {
             throw Failure.unexpectedConfiguration
         }
+    }
+
+    private static func runMouseDuringYankProbe() throws {
+        let bridge = SwimTerminalBridge(configuration: .init(yankClipboardPolicy: .registerOnly))
+        var editor = SwimEditor(text: "keep Swim yank")
+        _ = bridge.handle(.key(.char("y")), editor: &editor)
+        guard bridge.handle(
+            .mouse(.init(kind: .scrollUp, row: 0, column: 0)), editor: &editor
+        ) == nil,
+              case .copyRequested(let copy)? = bridge.handle(.key(.char("y")), editor: &editor),
+              copy.text.contains("keep Swim yank"),
+              editor.buffer.text == "keep Swim yank" else { throw Failure.unexpectedYank }
     }
 
     private static func runInputProbe() throws {

@@ -19,6 +19,9 @@ public struct SwimTerminalBridge:
         editor: inout SwimEditor,
         pageRows: Int = 1
     ) -> SwimEditorEvent? {
+        // Pointer events must not cancel a pending Swim operator such as y.
+        if case .mouse = event { return nil }
+
         let context = SwimEditorContext(
             pageRows: pageRows,
             displayColumns:

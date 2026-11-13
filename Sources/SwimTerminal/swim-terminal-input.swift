@@ -15,6 +15,9 @@ public enum SwimTerminalInputAdapter {
         _ event: TerminalInputEvent
     ) -> SwimTerminalInput {
         switch event {
+        case .mouse:
+            return .input(.unknown)
+
         case .key(let key):
             return .input(
                 input(

@@ -144,6 +144,8 @@ public struct SwimTerminalSurface:
         nowNanoseconds: UInt64 =
             DispatchTime.now().uptimeNanoseconds
     ) -> SwimTerminalSurfaceEvent? {
+        if case .mouse = event { return nil }
+
         if commandLine.isActive {
             switch commandLine.handle(
                 event.legacyKey
