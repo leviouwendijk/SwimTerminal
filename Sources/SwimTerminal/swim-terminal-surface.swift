@@ -300,6 +300,17 @@ public struct SwimTerminalSurface:
         )
     }
 
+    /// Replaces an active command line's text, e.g. with a completion.
+    public mutating func replaceCommandLine(
+        _ text: String
+    ) {
+        guard commandLine.isActive else { return }
+        commandLine.begin(
+            text: text
+        )
+        renderState = nil
+    }
+
     public mutating func setCommandStatus(
         _ status: String?
     ) {
