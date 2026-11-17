@@ -9,6 +9,7 @@ enum SwimTerminalTest {
             try SwimTerminalSurfaceSmoke.run()
             try SwimTerminalFollowEndSmoke.run()
             try SwimTerminalRejectionSmoke.run()
+            try SwimTerminalNavigatorSmoke.run()
 
             print(
                 "swim terminal smoke passed"

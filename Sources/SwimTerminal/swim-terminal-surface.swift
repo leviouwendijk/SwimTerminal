@@ -452,7 +452,8 @@ public struct SwimTerminalSurface:
         return TerminalTextLayout(
             text: editor.buffer.text,
             columns: textColumns,
-            tabWidth: configuration.tabWidth
+            tabWidth: configuration.tabWidth,
+            wrapMode: configuration.wrapMode
         ).rows.count
     }
 

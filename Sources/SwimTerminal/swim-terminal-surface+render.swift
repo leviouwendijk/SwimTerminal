@@ -26,7 +26,8 @@ extension SwimTerminalSurface {
         let layout = TerminalTextLayout(
             text: editor.buffer.text,
             columns: textColumns,
-            tabWidth: configuration.tabWidth
+            tabWidth: configuration.tabWidth,
+            wrapMode: configuration.wrapMode
         )
         let cursor = layout.position(
             forCursorOffset: editor.buffer.cursor.offset
