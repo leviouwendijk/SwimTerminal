@@ -47,10 +47,32 @@ let suite = TestSuite("terminal wrapping regressions") {
         try checkMappings(layout)
     }
 
-    Test("relocated tabs are rechecked for overflow") { _ in
+    Test("tabs are break points") { _ in
         let layout = TerminalTextLayout(text: "a b\tcd", columns: 5, tabWidth: 4, wrapMode: .word)
-        try Expect.equal(layout.rows.map(\.content), ["a ", "b   c", "d"], "tab rows")
-        try Expect.equal(layout.rows.map(\.sourceRange), [0..<2, 2..<5, 5..<6], "tab source coverage")
+        try Expect.equal(layout.rows.map(\.content), ["a b ", "cd"], "tab rows")
+        try Expect.equal(layout.rows.map(\.sourceRange), [0..<4, 4..<6], "tab source coverage")
+        try checkMappings(layout)
+    }
+
+    Test("a word ending at the edge keeps its row") { _ in
+        let exact = TerminalTextLayout(text: "hello world foo", columns: 11, wrapMode: .word)
+        try Expect.equal(exact.rows.map(\.content), ["hello world", "foo"], "full row kept")
+        try Expect.equal(exact.rows.map(\.sourceRange), [0..<12, 12..<15], "blank hangs on the full row")
+        try checkMappings(exact)
+        let blanks = TerminalTextLayout(text: "hello   world", columns: 5, wrapMode: .word)
+        try Expect.equal(blanks.rows.map(\.content), ["hello", "world"], "no blank-only row")
+        try checkMappings(blanks)
+    }
+
+    Test("a hanging blank before a newline adds no row") { _ in
+        let layout = TerminalTextLayout(text: "hello \nx", columns: 5, wrapMode: .word)
+        try Expect.equal(layout.rows.map(\.content), ["hello", "x"], "newline rows")
+        try checkMappings(layout)
+    }
+
+    Test("leading indentation is not a break point") { _ in
+        let layout = TerminalTextLayout(text: "    indented", columns: 6, wrapMode: .word)
+        try Expect.equal(layout.rows.map(\.content), ["    in", "dented"], "indented rows")
         try checkMappings(layout)
     }
 
@@ -79,16 +101,16 @@ let suite = TestSuite("terminal wrapping regressions") {
         }
     }
 
-    Test("configuration defaults and legacy decoding") { _ in
-        try Expect.equal(SwimTerminalConfiguration().wrapMode, .character, "default mode")
+    Test("configuration defaults to word wrapping, also when decoding") { _ in
+        try Expect.equal(SwimTerminalConfiguration().wrapMode, .word, "default mode")
         let legacy = Data(#"{"yankClipboardPolicy":{"registerOnly":{}},"tabWidth":4}"#.utf8)
         let decoded = try JSONDecoder().decode(SwimTerminalConfiguration.self, from: legacy)
-        try Expect.equal(decoded.wrapMode, .character, "legacy mode")
+        try Expect.equal(decoded.wrapMode, .word, "legacy mode")
         try Expect.equal(decoded.yankClipboardPolicy, .registerOnly, "legacy clipboard policy")
     }
 
-    Test("word-wrap configuration round trips") { _ in
-        let configuration = SwimTerminalConfiguration(tabWidth: 8, wrapMode: .word)
+    Test("wrap configuration round trips") { _ in
+        let configuration = SwimTerminalConfiguration(tabWidth: 8, wrapMode: .character)
         let data = try JSONEncoder().encode(configuration)
         let decoded = try JSONDecoder().decode(SwimTerminalConfiguration.self, from: data)
         try Expect.equal(decoded, configuration, "configuration round trip")

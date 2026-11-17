@@ -21,7 +21,7 @@ public struct SwimTerminalConfiguration:
     public init(
         yankClipboardPolicy: SwimTerminalYankClipboardPolicy = .systemClipboard,
         tabWidth: Int = 4,
-        wrapMode: TerminalTextWrapMode = .character
+        wrapMode: TerminalTextWrapMode = .word
     ) {
         self.yankClipboardPolicy = yankClipboardPolicy
         self.tabWidth = max(1, tabWidth)
@@ -45,7 +45,7 @@ public struct SwimTerminalConfiguration:
             wrapMode: try container.decodeIfPresent(
                 TerminalTextWrapMode.self,
                 forKey: .wrapMode
-            ) ?? .character
+            ) ?? .word
         )
     }
 }
