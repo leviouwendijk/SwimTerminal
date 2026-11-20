@@ -8,22 +8,12 @@ let package = Package(
         .macOS(.v13)
     ],
     products: [
-        .executable(
-            name: "swimtermregression",
-            targets: ["SwimTerminalRegressionTests"]
-        ),
         .library(
             name: "SwimTerminal",
             targets: ["SwimTerminal"]
         ),
-
-        .executable(
-            name: "swimtermtest",
-            targets: ["SwimTerminalTestFlows"]
-        ),
     ],
     dependencies: [
-        .package(url: "https://github.com/leviouwendijk/Testing.git", branch: "master"),
         .package(
             url: "https://github.com/leviouwendijk/Swim.git",
             branch: "master"
@@ -42,11 +32,6 @@ let package = Package(
         ),
     ],
     targets: [
-        .executableTarget(
-            name: "SwimTerminalRegressionTests",
-            dependencies: ["SwimTerminal", "Terminal", .product(name: "Testing", package: "Testing")],
-            path: "Tests/SwimTerminalRegressionTests"
-        ),
         .target(
             name: "SwimTerminal",
             dependencies: [
@@ -54,15 +39,6 @@ let package = Package(
                 "SwimInterpreter",
                 "Terminal",
                 "Clipboard",
-            ]
-        ),
-        .executableTarget(
-            name: "SwimTerminalTestFlows",
-            dependencies: [
-                "SwimTerminal",
-                "Swim",
-                "SwimInterpreter",
-                "Terminal",
             ]
         ),
     ],
